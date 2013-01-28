@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+	xmlns="http://maven.apache.org/POM/4.0.0">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.ow2.play</groupId>
+		<artifactId>play-parent</artifactId>
+		<version>1.0-SNAPSHOT</version>
+	</parent>
+
+	<groupId>org.ow2.play</groupId>
+	<artifactId>play-telco-siafuSimParis</artifactId>
+	<version>1.0-SNAPSHOT</version>
+	
+	<name>play-telco-siafuSimParis</name>
+	
+	<dependencies>
+		<dependency>
+			<groupId>eu.play-project.orange.swt</groupId>
+			<artifactId>swtsiafu</artifactId>
+			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>eu.play-project.orange.swt</groupId>
+			<artifactId>swt</artifactId>
+			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>eu.play-project.orange.swt</groupId>
+			<artifactId>config</artifactId>
+			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>eu.play-project.orange.swt</groupId>
+			<artifactId>coll</artifactId>
+			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.ow2.play</groupId>
+			<artifactId>commonDataTaxi</artifactId>
+			<version>1.0-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>3.8.1</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.ow2.petals.dsb</groupId>
+			<artifactId>dsb-notification-httpclient</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.ow2.petals.dsb</groupId>
+			<artifactId>dsb-soap</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<configuration>
+					<descriptorRefs>
+						<descriptorRef>jar-with-dependencies</descriptorRef>
+					</descriptorRefs>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>1.7</version>
+				<configuration>
+					<target>
+						<pathconvert property="compile_fileset" refid="maven.compile.classpath">
+						</pathconvert>
+						<echo message="|-- compile classpath" />
+						<echo message="|   |-- ${compile_fileset}" />
+					</target>
+				</configuration>
+				<goals>
+					<goal>run</goal>
+				</goals>
+
+			</plugin>
+
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<version>1.2.1</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>java</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<includeProjectDependencies>true</includeProjectDependencies>
+					<includePluginDependencies>true</includePluginDependencies>
+					<mainClass>de.nec.nle.siafu.control.Siafu</mainClass>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>
+

@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema targetNamespace="http://www.orange.org/TaxiEventType"
+	elementFormDefault="qualified" xmlns="http://www.w3.org/2001/XMLSchema"
+	xmlns:orangeLabsTaxiUC="http://www.orange.org/TaxiEventType">
+
+	<complexType name="EventType" abstract="true">
+		<sequence>
+			<element name="uniqueId" type="string"></element>
+			<element name="sequenceNumber" type="string"></element>
+			<element name="timeStamp" type="string"></element>
+		</sequence>
+	</complexType>
+
+	<element name="UnexpectedEvent">
+		<complexType>
+			<complexContent>
+				<extension base="orangeLabsTaxiUC:EventType">
+					<sequence>
+						<element name="status" type="string" />
+						<element name="unexpectedMessage" type="string" />
+						<element name="userType" type="string" />
+						<element name="phoneNumber" type="string" />
+					</sequence>
+				</extension>
+			</complexContent>
+		</complexType>
+	</element>
+
+
+	
+
+	<element name="SMSCustomerAlertEvent">
+		<complexType>
+			<complexContent>
+				<extension base="orangeLabsTaxiUC:EventType">
+					<sequence>
+						<element name="message" type="string" />
+						<element name="customerNumber" type="string" />
+						<element name="longitude" type="double" />
+						<element name="latitude" type="double" />
+					</sequence>
+				</extension>
+			</complexContent>
+		</complexType>
+	</element>
+
+	<simpleType name="CalendarStatusType">
+		<restriction base="string">
+			<enumeration value="WORKING"></enumeration>
+			<enumeration value="MEETING"></enumeration>
+			<enumeration value="HOLLIDAY"></enumeration>
+		</restriction>
+	</simpleType>
+
+	<element name="AvailabilityEvent">
+		<complexType>
+			<complexContent>
+				<extension base="orangeLabsTaxiUC:EventType">
+					<sequence>
+						<element name="status" type="orangeLabsTaxiUC:CalendarStatusType" />
+						<element name="userType" type="string" />
+						<element name="phoneNumber" type="string" />
+					</sequence>
+				</extension>
+			</complexContent>
+		</complexType>
+	</element>
+
+	<element name="GeolocationEvent">
+		<complexType>
+			<complexContent>
+				<extension base="orangeLabsTaxiUC:EventType">
+					<sequence>
+						<element name="userType" type="string" />
+						<element name="phoneNumber" type="string" />
+						<element name="longitude" type="double" />
+						<element name="latitude" type="double" />
+					</sequence>
+				</extension>
+			</complexContent>
+		</complexType>
+	</element>
+
+	<element name="TrafficJamEvent">
+		<complexType>
+			<complexContent>
+				<extension base="orangeLabsTaxiUC:EventType">
+					<sequence>
+						<element name="payloadJamEvent" type="string" />
+						<element name="latitude" type="double" />
+						<element name="longitude" type="double" />
+					</sequence>
+				</extension>
+			</complexContent>
+		</complexType>
+	</element>
+
+	<element name="PresenceEvent">
+		<complexType>
+			<complexContent>
+				<extension base="orangeLabsTaxiUC:EventType">
+					<sequence>
+						<element name="status" type="boolean" />
+						<element name="userType" type="string" />
+						<element name="phoneNumber" type="string" />
+					</sequence>
+				</extension>
+			</complexContent>
+		</complexType>
+	</element>
+
+	<element name="CallEvent">
+		<complexType>
+			<complexContent>
+				<extension base="orangeLabsTaxiUC:EventType">
+					<sequence>
+						<element name="callerPhoneNumber" type="string" />
+						<element name="calleePhoneNumber" type="string" />
+						<element name="latitude" type="double" />
+						<element name="longitude" type="double" />
+						<element name="message" type="string" />
+						<element name="direction" type="string" />
+					</sequence>
+				</extension>
+			</complexContent>
+		</complexType>
+	</element>
+
+	<element name="FaceBookEvent">
+		<complexType>
+			<complexContent>
+				<extension base="orangeLabsTaxiUC:EventType">
+					<sequence>
+						<element name="fbId" type="string" />
+						<element name="message" type="string" />
+						<element name="status" type="string" />
+						<element name="latitude" type="double" />
+						<element name="longitude" type="double" />
+					</sequence>
+				</extension>
+			</complexContent>
+		</complexType>
+	</element>
+
+	<element name="TwitterEvent">
+		<complexType>
+			<complexContent>
+				<extension base="orangeLabsTaxiUC:EventType">
+					<sequence>
+						<element name="twId" type="string" />
+						<element name="message" type="string" />
+						<element name="status" type="string" />
+						<element name="latitude" type="double" />
+						<element name="longitude" type="double" />
+					</sequence>
+				</extension>
+			</complexContent>
+		</complexType>
+	</element>
+	<element name="OutNetworkEvent">
+		<complexType>
+			<complexContent>
+				<extension base="orangeLabsTaxiUC:EventType">
+					<sequence>
+						<element name="callerPhoneNumber" type="string" />
+						<element name="calleePhoneNumber" type="string" />
+						<element name="latitude" type="double" />
+						<element name="longitude" type="double" />
+						<element name="outOfNetwork" type="boolean" />
+						<element name="signalStrength" type="string" />
+					</sequence>
+				</extension>
+			</complexContent>
+		</complexType>
+	</element>
+
+	<element name="Click2CallEvent">
+		<complexType>
+			<complexContent>
+				<extension base="orangeLabsTaxiUC:EventType">
+					<sequence>
+						<element name="callerPhoneNumber" type="string" />
+						<element name="calleePhoneNumber" type="string" />
+						<element name="message" type="string" />
+					</sequence>
+				</extension>
+			</complexContent>
+		</complexType>
+	</element>
+</schema>

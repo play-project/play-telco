@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+	<soap:Header />
+	<soap:Body>
+		<wsnt:Notify xmlns:wsnt="http://docs.oasis-open.org/wsn/b-2">
+			<wsnt:NotificationMessage>
+				<wsnt:Topic Dialect="http://www.w3.org/TR/1999/REC-xpath-19991116" xmlns:s="http://www.petalslink.org/dsb/topicsns/">
+					s:TaxiUCCall#stream
+				</wsnt:Topic>
+				<wsnt:Message>
+					<mt:nativeMessage xmlns:mt="http://www.event-processing.org/wsn/msgtype/" mt:syntax="application/x-trig">
+						@prefix sioc: &lt;http://rdfs.org/sioc/ns#&gt; .
+						@prefix : &lt;http://events.event-processing.org/types/&gt; .
+						@prefix uctelco: &lt;http://events.event-processing.org/uc/telco/&gt; .
+						@prefix rdfs: &lt;http://www.w3.org/2000/01/rdf-schema#&gt; .
+						@prefix geo: &lt;http://www.w3.org/2003/01/geo/wgs84_pos#&gt; .
+						@prefix e: &lt;http://events.event-processing.org/ids/&gt; .
+						@prefix s: &lt;http://streams.event-processing.org/ids/&gt; .
+						@prefix esr: &lt;http://imu.ntua.gr/play/esr/examples/2#&gt; .
+						@prefix xsd: &lt;http://www.w3.org/2001/XMLSchema#&gt; .
+						@prefix rdf: &lt;http://www.w3.org/1999/02/22-rdf-syntax-ns#&gt; .
+						@prefix src: &lt;http://sources.event-processing.org/ids/&gt; .
+						@prefix user: &lt;http://graph.facebook.com/schema/user#&gt; .
+						&lt;e:111#event&gt;
+						a :UcTelcoCall ;
+						:endTime &quot;2012-09-12T07:50:08&quot;^^xsd:dateTime ;
+						:stream &lt;s:TaxiUCCall#stream&gt;  
+						.
+						
+					</mt:nativeMessage>
+				</wsnt:Message>
+			</wsnt:NotificationMessage>
+		</wsnt:Notify>
+	</soap:Body>
+</soap:Envelope>

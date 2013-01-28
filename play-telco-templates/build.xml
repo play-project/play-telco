@@ -1,0 +1,29 @@
+<project name="PlayTemplates" default="MavenAssemblyAssembly">
+	<condition property="maven.extension" value=".bat" else="">
+		<os family="windows"/>
+	</condition>
+	
+	<property name="mvnExec" value="mvn${maven.extension}"/>
+	
+	<target name="MavenTest">
+		<exec executable="${mvnExec}" failonerror="true">
+			<arg value="test"/>
+		</exec>
+	</target>
+		
+	<target name="MavenInstall">
+		<exec executable="${mvnExec}" failonerror="true">
+			<arg value="test"/>
+			<arg value="install"/>
+			<arg value="assembly:assembly"/>
+		</exec>
+	</target>
+	
+	<target name="MavenAssemblyAssembly">
+		<exec executable="${mvnExec}" failonerror="true">
+			<arg value="test"/>
+			<arg value="install"/>
+			<arg value="assembly:assembly"/>
+		</exec>
+	</target>
+</project>
