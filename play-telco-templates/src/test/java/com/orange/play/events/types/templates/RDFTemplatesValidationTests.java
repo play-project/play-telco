@@ -238,13 +238,13 @@ public class RDFTemplatesValidationTests {
 		 */
 		ModelSet sdkRdf = EventHelpers.createEmptyModelSet();
 		sdkRdf.addModel(sdkEvent.getModel());
-		System.out.println("=============== templRdf: =============================");
+		System.out.println("=============== sdkRdf: ==============================");
 		System.out.println(sdkRdf.getModels().next().serialize(Syntax.Turtle));
 
 		/*
 		 * Compare the two: 
 		 */
-		// This is bit of a hack but both iterators only have one model:
+		// This is bit of a hack but both iterators contain only one model:
 		assertTrue(sdkRdf.getModels().next().isIsomorphicWith(templRdf.getModels().next()));
 
 	}
