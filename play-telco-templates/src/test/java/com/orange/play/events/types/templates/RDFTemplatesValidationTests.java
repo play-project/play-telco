@@ -3,6 +3,7 @@ package com.orange.play.events.types.templates;
 import static eu.play_project.play_commons.constants.Event.EVENT_ID_SUFFIX;
 import static eu.play_project.play_commons.constants.Event.WSN_MSG_DEFAULT_SYNTAX;
 import static eu.play_project.play_commons.constants.Namespace.EVENTS;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
@@ -245,6 +246,7 @@ public class RDFTemplatesValidationTests {
 		 * Compare the two: 
 		 */
 		// This is bit of a hack but both iterators contain only one model:
+		assertEquals(sdkRdf.getModels().next().getContextURI(), templRdf.getModels().next().getContextURI());
 		assertTrue(sdkRdf.getModels().next().isIsomorphicWith(templRdf.getModels().next()));
 
 	}
