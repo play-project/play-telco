@@ -17,6 +17,7 @@
 	<inceptionYear>2010</inceptionYear>
 	
 	<modules>
+		<module>play-mobile-sub</module>
 		<module>play-telco-commonDataTaxi</module>
 		<module>play-telco-siafuSimParis</module>
 		<module>play-telco-templates</module>

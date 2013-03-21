@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+	xmlns="http://maven.apache.org/POM/4.0.0"
+>
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>org.ow2.play</groupId>
+		<artifactId>play-telco</artifactId>
+		<version>1.0-SNAPSHOT</version>
+		<relativePath>../pom.xml</relativePath>
+	</parent>
+
+	<artifactId>play-mobile-sub</artifactId>
+	<packaging>war</packaging>
+	<version>1.0-SNAPSHOT</version>
+	<name>PLAY Mobile Sub</name>
+	<description>The PLAY Web Service interfaced to the PLAY Platform</description>
+
+	<dependencies>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>3.8.1</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>2.2.2</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.google.android.gcm</groupId>
+			<artifactId>gcm-server</artifactId>
+			<version>1.0.2</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.cxf</groupId>
+			<artifactId>cxf-bundle-minimal</artifactId>
+			<version>2.5.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.ow2.play</groupId>
+			<artifactId>play-eventadapter-abstractrdfreceiver</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.ow2.play</groupId>
+			<artifactId>play-commons-constants</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.ow2.play</groupId>
+			<artifactId>play-commons-eventtypes</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.ow2.petals.dsb</groupId>
+			<artifactId>dsb-notification-commons</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<finalName>play-mobile-sub</finalName>
+		<resources>
+			<!-- Enable filtering to add Twitter passwords from your settings.xml 
+				:stuehmer -->
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+			</resource>
+		</resources>
+		<plugins>
+			<!-- Do not deploy this artefact to maven repo, it is very big. :stuehmer  -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-deploy-plugin</artifactId>
+				<configuration>
+					<skip>true</skip>
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.2</version>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.cargo</groupId>
+				<artifactId>cargo-maven2-plugin</artifactId>
+				<version>1.2.1</version>
+				<configuration>
+					<wait>true</wait>
+					<container>
+						<containerId>tomcat6x</containerId>
+						<type>remote</type>
+					</container>
+					<configuration>
+						<type>runtime</type>
+						<properties>
+							<cargo.remote.uri>${tomcat.uri}</cargo.remote.uri>
+							<cargo.remote.username>${tomcat.user}</cargo.remote.username>
+							<cargo.remote.password>${tomcat.pass}</cargo.remote.password>
+						</properties>
+					</configuration>
+				</configuration>
+			</plugin>			
+		</plugins>
+		
+		<outputDirectory>${project.build.directory}/${project.build.finalName}/WEB-INF/classes</outputDirectory>
+		
+	</build>
+
+	<repositories>
+		<repository>
+			<id>gcm-server-repository</id>
+			<url>https://github.com/slorber/gcm-server-repository/raw/master/releases/</url>
+		</repository>
+		<repository>
+			<id>petalslink-public.release</id>
+			<name>PetalsLink Public Repository</name>
+			<url>http://maven.petalslink.com/public</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>petalslink-public.snapshot</id>
+			<name>PetalsLink Snapshot Public Repository</name>
+			<url>http://maven.petalslink.com/public-snapshot</url>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+		</repository>
+		<repository>
+			<id>petalslink-public.others</id>
+			<url>http://maven.petalslink.com/others</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
+	
+	<properties>
+		<play.commons.version>1.1-SNAPSHOT</play.commons.version>
+	</properties>
+	
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-log4j12</artifactId>
+				<version>1.5.6</version>
+			</dependency>
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-api</artifactId>
+				<version>1.5.6</version>
+			</dependency>
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>jcl-over-slf4j</artifactId>
+				<version>1.5.6</version>
+			</dependency>
+			<dependency>
+				<groupId>org.ow2.play</groupId>
+				<artifactId>play-commons-constants</artifactId>
+				<version>${play.commons.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.ow2.play</groupId>
+				<artifactId>play-commons-eventformat</artifactId>
+				<version>${play.commons.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.ow2.play</groupId>
+				<artifactId>play-commons-eventtypes</artifactId>
+				<version>${play.commons.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.semweb4j</groupId>
+				<artifactId>rdf2go.impl.jena</artifactId>
+				<version>4.8.3-SNAPSHOT</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+</project>
