@@ -2,9 +2,6 @@ package org.petalslink.wsn.webservices.service.dom;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 
 import javax.annotation.Resource;
 import javax.xml.namespace.QName;
@@ -52,7 +49,8 @@ public class NotificationConsumerService implements Provider<SOAPMessage> {
     @Resource
     WebServiceContext wsContext;
 
-    public SOAPMessage invoke(SOAPMessage request) {
+    @Override
+	public SOAPMessage invoke(SOAPMessage request) {
         if (registrationIDs == null) {
             System.out.println("The registrationIDs HashMap doesn't exist => create it");
             registrationIDs = new HashMap<String, String>();
@@ -91,13 +89,9 @@ public class NotificationConsumerService implements Provider<SOAPMessage> {
                     System.out.format("\tphoneNumber = %s\n", phoneNumber);
                     
                     if (registrationId != null && phoneNumber != null) {
-                        if (isPhoneNumber(phoneNumber)) {
-                            System.err.println("\tadding to registrationIDs...");
-                            registrationIDs.put(phoneNumber, registrationId);
-                            System.out.format("\tadded => registrationIDs = %s\n", registrationIDs.toString());
-                        } else {
-                            handleFault("invalid phoneNumber: check your international style e.g. 336XXXXXXXX ");
-                        }
+                        System.err.println("\tadding to registrationIDs...");
+                        registrationIDs.put(phoneNumber, registrationId);
+                        System.out.format("\tadded => registrationIDs = %s\n", registrationIDs.toString());
                     } else {
                         handleFault("registrationID or phoneNumber content not specified");
                     }
@@ -119,16 +113,12 @@ public class NotificationConsumerService implements Provider<SOAPMessage> {
                     System.out.format("\tphoneNumber = %s\n", phoneNumber);
 
                     if (phoneNumber != null) {
-                        if (isPhoneNumber(phoneNumber)) {
-                            if (registrationIDs.containsKey(phoneNumber)) {
-                                System.err.println("\tremoving from registrationIDs...");
-                                registrationIDs.remove(phoneNumber);
-                                System.out.format("\tadded => registrationIDs = %s\n", registrationIDs.toString());
-                            } else {
-                                handleFault("no previous registration for " + phoneNumber);
-                            }                            
+                        if (registrationIDs.containsKey(phoneNumber)) {
+                            System.err.println("\tremoving from registrationIDs...");
+                            registrationIDs.remove(phoneNumber);
+                            System.out.format("\tadded => registrationIDs = %s\n", registrationIDs.toString());
                         } else {
-                            handleFault("invalid phoneNumber: check your international style e.g. 336XXXXXXXX ");
+                            handleFault("no previous registration for " + phoneNumber);
                         }
                     } else {
                         handleFault("registrationID or phoneNumber content not specified");
@@ -163,22 +153,6 @@ public class NotificationConsumerService implements Provider<SOAPMessage> {
             }
         }
         return result;
-    }
-
-    private boolean isPhoneNumber(String phoneNumber) {
-        System.out.format("Verifying phoneNumber %s\n", phoneNumber);
-        try {
-            Pattern p = Pattern.compile("^[0-9]+$");
-            Matcher m = p.matcher(phoneNumber);
-            if (m.find()) {
-                System.out.format("The phoneNumber %s is ok\n", phoneNumber);
-                return true;
-            }
-        } catch (PatternSyntaxException e) {
-            System.out.format("The phoneNumber %s is invalid: %s\n", phoneNumber, e.getMessage());
-            e.printStackTrace();
-        }
-        return false;
     }
 
     private void handleFault(Exception e) {
