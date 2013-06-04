@@ -223,8 +223,10 @@ public class NotificationConsumerImpl implements INotificationConsumer {
 						esrActionTypesSet.add(esrActionTypes.next().asURI());
 					}
 
-					esrActionJson.addProperty("rdf_type", esrAction.getAllType().next().asURI().asJavaURI().toString());
-
+					if (esrAction.getAllType().hasNext()) {
+						esrActionJson.addProperty("rdf_type", esrAction.getAllType().next().asURI().asJavaURI().toString());
+					}
+					
 					if (esrActionTypesSet.contains(EsrSubscribeTo.RDFS_CLASS)) {
 						EsrSubscribeTo esrSubscribeTo = (EsrSubscribeTo) esrAction.castTo(EsrSubscribeTo.class);
 
