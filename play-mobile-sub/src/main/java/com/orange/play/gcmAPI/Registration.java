@@ -116,4 +116,20 @@ public class Registration {
     	return results;
     }
     
+    public synchronized Set<String> getTopicsForRegistrationId(String registrationId) {
+    	Set<String> results = null;
+    	RegistrationId regId = registrationIds.get(registrationId);
+    	if (regId != null) {
+    		results = registrationIdToTopics.get(regId);
+    	}
+
+    	if (results != null) {
+    		return results;
+    	}
+    	else {
+    		return new HashSet<String>();
+    	}
+
+    }
+    
 }
