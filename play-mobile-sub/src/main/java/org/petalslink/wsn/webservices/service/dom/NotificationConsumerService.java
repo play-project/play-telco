@@ -48,7 +48,6 @@ public class NotificationConsumerService implements Provider<SOAPMessage> {
     private static final String WSNT_PHONE_NUMBER = "phoneNumber";
     private static final String WSNT_PHONE_REGID = "registrationID";
     private static final String WSNT_PHONE_TOPICS = "topics";
-    private static final String WSNT_PHONE_TOPIC_ITEM ="topic";
     
     private final Registration gcmRegIds = Registration.getInstance();
     
