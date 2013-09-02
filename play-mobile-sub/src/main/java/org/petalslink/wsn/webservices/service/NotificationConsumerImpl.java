@@ -27,7 +27,6 @@ import org.ontoware.rdf2go.model.node.Node;
 import org.ontoware.rdf2go.model.node.URI;
 import org.ontoware.rdf2go.model.node.Variable;
 import org.ontoware.rdfreactor.schema.rdfs.Class;
-import org.petalslink.wsn.webservices.service.dom.NotificationConsumerService;
 import org.w3c.dom.Document;
 
 import com.ebmwebsourcing.easycommons.xml.XMLHelper;
@@ -44,6 +43,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSyntaxException;
+import com.orange.play.gcmAPI.Registration;
 
 import eu.play_project.play_commons.constants.Stream;
 import eu.play_project.play_eventadapter.AbstractReceiver;
@@ -60,13 +60,8 @@ public class NotificationConsumerImpl implements INotificationConsumer {
 	private static final String STREAM_TAXI_UC_ESR_RECOM = "S:" + Stream.TaxiUCESRRecom.getQName().getLocalPart().split("#")[0].toUpperCase();
 	private static final String STREAM_TAXI_UC_ESR_RECOM_DCEP = "S:" + Stream.TaxiUCESRRecomDcep.getQName().getLocalPart().split("#")[0].toUpperCase();
 
-	/*
-    // MANUAL PARSING
-    private static final Pattern calleePhoneNumberPattern = Pattern.compile("calleePhoneNumber[^0-9]*([0-9]+)");
-    private static final Pattern callerPhoneNumberPattern = Pattern.compile("callerPhoneNumber[^0-9]*([0-9]+)");
-    private static final Pattern recommendationPattern = Pattern.compile("recommendation[^\"]*\"([^\"]*)\"");
-	 */
-
+	private final Registration gcmRegIds = Registration.getInstance();
+	
 	public static final synchronized INotificationConsumer getInstance() {
 		if (INSTANCE == null) {
 			INSTANCE = new NotificationConsumerImpl();
@@ -120,30 +115,6 @@ public class NotificationConsumerImpl implements INotificationConsumer {
 
 	protected void handleRecommendation(String targetTopicContent, String documentStr) {
 		System.out.format("\ttype: recommendation\n");
-
-		/*
-        // MANUAL PARSING
-        try {
-            System.out.println("\tMANUAL parsing...");
-            Matcher callerPhoneNumberMatcher = callerPhoneNumberPattern.matcher(documentStr);
-            if (callerPhoneNumberMatcher.find()) {
-                uctelco_callerPhoneNumber = callerPhoneNumberMatcher.group(1);
-            }
-            Matcher calleePhoneNumberMatcher = calleePhoneNumberPattern.matcher(documentStr);
-            if (calleePhoneNumberMatcher.find()) {
-                uctelco_calleePhoneNumber = calleePhoneNumberMatcher.group(1);
-            }
-            Matcher recommendationMatcher = recommendationPattern.matcher(documentStr);
-            if (recommendationMatcher.find()) {
-                esr_recommendation = recommendationMatcher.group(1);
-            }
-            System.out.println("\tMANUAL parsing ok");
-        } catch (Exception e) {
-            System.out.println("\tMANUAL parsing error");
-            System.out.println(e.getMessage());
-            e.printStackTrace();
-        }
-		 */
 
 		// RDF parsing
 		Model model = null;
@@ -317,7 +288,7 @@ public class NotificationConsumerImpl implements INotificationConsumer {
 			// Recommendation
 			System.out.format("\tUcTelcoEsrRecom = %s\n", recomJson.toString());
 
-			sendGcm(uctelco_callerPhoneNumber, recomJson);
+			notifyByPhoneNumber(uctelco_callerPhoneNumber, recomJson);
 
 		} catch (NoRdfEventException e) {
 			System.out.println("rdf parsing error");
@@ -336,7 +307,7 @@ public class NotificationConsumerImpl implements INotificationConsumer {
 			System.out.println("ok");
 			StringWriter s = new StringWriter();
 
-			String phoneNumber = "";
+			String phoneNumber = "017622002200";
 			ClosableIterator<Statement> results;
 			results = rdf.findStatements(Variable.ANY, UcTelcoCall.UCTELCOCALLERPHONENUMBER, Variable.ANY);
 			if (results.hasNext()) {
@@ -351,6 +322,7 @@ public class NotificationConsumerImpl implements INotificationConsumer {
 			}
 
 			rdf.writeTo(s, Syntax.RdfJson);
+			// get subscribing regIds and use #notifyByTopic(...)
 			sendGcm(phoneNumber, new JsonParser().parse(s.toString()).getAsJsonObject());
 
 		} catch (NoRdfEventException e) {
@@ -362,12 +334,22 @@ public class NotificationConsumerImpl implements INotificationConsumer {
 		}
 	}
 
-	private void sendGcm(String uctelco_callerPhoneNumber,
+	private void notifyByPhoneNumber(String uctelco_callerPhoneNumber,
 			JsonObject eventPayload) throws IOException {
-		String registrationId = NotificationConsumerService.registrationIDs.get(uctelco_callerPhoneNumber);
+		String registrationId = gcmRegIds.getRegistrationIdForPhoneNumber(uctelco_callerPhoneNumber);
 		System.out.format("\t\t => related registrationID = %s\n", registrationId);
-		System.out.println("\t\t => Sending");
+		sendGcm(registrationId, eventPayload);
+	}
+	
+	private void notifyByTopic(String topicUri,
+			JsonObject eventPayload) {
+		
+	}
+	private void sendGcm(String registrationId,
+			JsonObject eventPayload) throws IOException {
+		System.out.println("\t\t => Message size [bytes]: " + eventPayload.toString().length());
 		if (registrationId != null) {
+			System.out.println("\t\t => Sending");
 			Result result = com.orange.play.gcmAPI.Send.sendMessage(registrationId, eventPayload.toString());
 			if (result.getMessageId() != null) {
 				System.out.println("\t\t => => GCM result: message sent successfully");
@@ -375,17 +357,19 @@ public class NotificationConsumerImpl implements INotificationConsumer {
 				if (canonicalRegId != null) {
 					// same device has more than one registration ID: update database
 					System.out.println("\t\t => => GCM result: same device has more than one registration ID: update database");
-					NotificationConsumerService.registrationIDs.put(uctelco_callerPhoneNumber, canonicalRegId);
+					gcmRegIds.updateRegistrationId(registrationId, canonicalRegId);
 				}
 			} else {
 				String error = result.getErrorCodeName();
 				if (error.equals(Constants.ERROR_NOT_REGISTERED)) {
 					// application has been removed from device - unregister database
 					System.out.println("\t\t => => GCM result: application has been removed from device - unregister database");
-					NotificationConsumerService.registrationIDs.remove(uctelco_callerPhoneNumber);
+					gcmRegIds.removeRegistrationId(registrationId);
+				}
+				else {
+					System.out.println("\t\t => => GCM result: " + error);
 				}
 			}
-
 		}
 	}
 }

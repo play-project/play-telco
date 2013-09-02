@@ -1,7 +1,6 @@
 package org.petalslink.wsn.webservices.service.dom;
 
 import java.util.Date;
-import java.util.HashMap;
 
 import javax.annotation.Resource;
 import javax.xml.namespace.QName;
@@ -28,16 +27,20 @@ import com.ebmwebsourcing.wsstar.resourcelifetime.datatypes.impl.impl.WsrfrlMode
 import com.ebmwebsourcing.wsstar.resourceproperties.datatypes.impl.impl.WsrfrpModelFactoryImpl;
 import com.ebmwebsourcing.wsstar.topics.datatypes.impl.impl.WstopModelFactoryImpl;
 import com.ebmwebsourcing.wsstar.wsnb.services.impl.util.Wsnb4ServUtils;
+import com.orange.play.gcmAPI.Registration;
 
 @WebServiceProvider(wsdlLocation = "WS-NotificationConsumer.wsdl", serviceName = "NotificationConsumerService", portName = "NotificationConsumerPort", targetNamespace = "http://docs.oasis-open.org/wsn/bw-2")
 @ServiceMode(value = javax.xml.ws.Service.Mode.MESSAGE)
 public class NotificationConsumerService implements Provider<SOAPMessage> {
 
-    private static final String WSNT_UNREGISTER = "Unregister";
-    private static final String WSNT_REGISTER = "Register";
-    private static final String WSNT_NOTIFY = "Notify";
+	public static final String WSNT_UNREGISTER = "Unregister";
+    public static final String WSNT_REGISTER = "Register";
+    public static final String WSNT_NOTIFY = "Notify";
     
-    public static HashMap<String, String> registrationIDs = null;
+    private static final String WSNT_PHONE_NUMBER = "phoneNumber";
+    private static final String WSNT_PHONE_REGID = "registrationID";
+    
+    private final Registration gcmRegIds = Registration.getInstance();
 
     static {
         Wsnb4ServUtils.initModelFactories(new WsrfbfModelFactoryImpl(),
@@ -49,12 +52,10 @@ public class NotificationConsumerService implements Provider<SOAPMessage> {
     @Resource
     WebServiceContext wsContext;
 
+    
+    
     @Override
 	public SOAPMessage invoke(SOAPMessage request) {
-        if (registrationIDs == null) {
-            System.out.println("The registrationIDs HashMap doesn't exist => create it");
-            registrationIDs = new HashMap<String, String>();
-        }
 
         QName operation = getOperation();
         Document in = null;
@@ -78,20 +79,29 @@ public class NotificationConsumerService implements Provider<SOAPMessage> {
             try {
                 System.out.println(String.format("%s: REGISTER", new Date().toString()));
                 
-                NodeList registrationIDNL = request.getSOAPBody().getElementsByTagName("registrationID");
-                NodeList phoneNumberNL = request.getSOAPBody().getElementsByTagName("phoneNumber");
+                NodeList registrationIDNL = request.getSOAPBody().getElementsByTagName(WSNT_PHONE_REGID);
+                NodeList phoneNumberNL = request.getSOAPBody().getElementsByTagName(WSNT_PHONE_NUMBER);
                 
-                if (registrationIDNL != null && phoneNumberNL != null) {
+                if (registrationIDNL.getLength() > 0 && phoneNumberNL.getLength() > 0) {
                     String registrationId =  registrationIDNL.item(0).getTextContent();
                     String phoneNumber = phoneNumberNL.item(0).getTextContent();
                     
-                    System.out.format("\tregistrationId = %s\n", registrationId);
-                    System.out.format("\tphoneNumber = %s\n", phoneNumber);
+                    System.out.format("\t%s = %s\n", WSNT_PHONE_REGID, registrationId);
+                    System.out.format("\t%s = %s\n", WSNT_PHONE_NUMBER, phoneNumber);
                     
                     if (registrationId != null && phoneNumber != null) {
-                        System.err.println("\tadding to registrationIDs...");
-                        registrationIDs.put(phoneNumber, registrationId);
-                        System.out.format("\tadded => registrationIDs = %s\n", registrationIDs.toString());
+                        System.err.println("\tadding to phoneNumberToRegistrationId...");
+                        gcmRegIds.addPhoneNumberMapping(registrationId, phoneNumber);
+                        System.out.format("\tadded => phoneNumberToRegistrationId = %s\n", phoneNumber);
+                        
+                        NodeList topicsNL = request.getSOAPBody().getElementsByTagName("topics");
+                       	for (int i = 0; i < topicsNL.getLength(); i++) {
+                       		String topic = topicsNL.item(i).getTextContent().trim();
+                       		if (!topic.isEmpty()) {
+                       			gcmRegIds.addTopicMapping(registrationId, topic);
+                       		}
+                       	}
+                        
                     } else {
                         handleFault("registrationID or phoneNumber content not specified");
                     }
@@ -105,26 +115,30 @@ public class NotificationConsumerService implements Provider<SOAPMessage> {
             try {
                 System.out.println(String.format("%s: UNREGISTER", new Date().toString()));
                 
-                NodeList phoneNumberNL = request.getSOAPBody().getElementsByTagName("phoneNumber");
+                NodeList phoneNumberNL = request.getSOAPBody().getElementsByTagName(WSNT_PHONE_NUMBER);
+                NodeList registrationIdNL = request.getSOAPBody().getElementsByTagName(WSNT_PHONE_REGID);
 
-                if (phoneNumberNL != null) {
+                if (phoneNumberNL != null && phoneNumberNL.getLength() > 0) {
                     String phoneNumber = phoneNumberNL.item(0).getTextContent();
                     
                     System.out.format("\tphoneNumber = %s\n", phoneNumber);
 
                     if (phoneNumber != null) {
-                        if (registrationIDs.containsKey(phoneNumber)) {
-                            System.err.println("\tremoving from registrationIDs...");
-                            registrationIDs.remove(phoneNumber);
-                            System.out.format("\tadded => registrationIDs = %s\n", registrationIDs.toString());
-                        } else {
-                            handleFault("no previous registration for " + phoneNumber);
-                        }
-                    } else {
-                        handleFault("registrationID or phoneNumber content not specified");
+                       System.err.println("\tremoving from phoneNumberToRegistrationId...");
+                       String oldId = gcmRegIds.getRegistrationIdForPhoneNumber(phoneNumber);
+                       gcmRegIds.removeRegistrationId(oldId);
                     }
-                } else {
-                    handleFault("registrationID or phoneNumber not specified");
+                }
+                
+                if (registrationIdNL != null && registrationIdNL.getLength() > 0) {
+                    String registrationId = registrationIdNL.item(0).getTextContent();
+                    
+                    System.out.format("\tregistrationId = %s\n", registrationId);
+
+                    if (registrationId != null) {
+                       System.err.println("\tremoving registrationId...");
+                       gcmRegIds.removeRegistrationId(registrationId);
+                    }
                 }
             } catch (SOAPException e) {
                 handleFault(e);
@@ -163,4 +177,5 @@ public class NotificationConsumerService implements Provider<SOAPMessage> {
     private void handleFault(String message) {
         System.out.format("%s: FAULT: %s\n", new Date().toString(), message);
     }
+
 }
