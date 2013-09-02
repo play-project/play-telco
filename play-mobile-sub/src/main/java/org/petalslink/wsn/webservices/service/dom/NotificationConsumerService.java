@@ -47,6 +47,8 @@ public class NotificationConsumerService implements Provider<SOAPMessage> {
     
     private static final String WSNT_PHONE_NUMBER = "phoneNumber";
     private static final String WSNT_PHONE_REGID = "registrationID";
+    private static final String WSNT_PHONE_TOPICS = "topics";
+    private static final String WSNT_PHONE_TOPIC_ITEM ="topic";
     
     private final Registration gcmRegIds = Registration.getInstance();
     
@@ -113,7 +115,7 @@ public class NotificationConsumerService implements Provider<SOAPMessage> {
                 
                 NodeList registrationIDNL = request.getSOAPBody().getElementsByTagName(WSNT_PHONE_REGID);
                 NodeList phoneNumberNL = request.getSOAPBody().getElementsByTagName(WSNT_PHONE_NUMBER);
-            	NodeList topicsNL = request.getSOAPBody().getElementsByTagName("topics");
+            	NodeList topicsNL = request.getSOAPBody().getElementsByTagName(WSNT_PHONE_TOPICS);
                 
                 if (registrationIDNL.getLength() > 0) {
                 	
@@ -134,9 +136,10 @@ public class NotificationConsumerService implements Provider<SOAPMessage> {
 		                    }
 	                    }
 	                    if (topicsNL.getLength() > 0) {
-	
-	                       	for (int i = 0; i < topicsNL.getLength(); i++) {
-	                       		String topic = topicsNL.item(i).getTextContent().trim();
+	                    	NodeList items = phoneNumberNL.item(0).getChildNodes();
+	                    	
+	                       	for (int i = 0; i < items.getLength(); i++) {
+	                       		String topic = items.item(i).getTextContent().trim();
 	                       		if (!topic.isEmpty()) {
 	                       			gcmRegIds.addTopicMapping(registrationId, topic);
 	                       			try {
