@@ -9,6 +9,7 @@ import java.util.Set;
 
 import javax.xml.transform.TransformerException;
 
+import org.apache.commons.collections.buffer.CircularFifoBuffer;
 import org.event_processing.events.types.EsrAction;
 import org.event_processing.events.types.EsrShowFriendGeolocation;
 import org.event_processing.events.types.EsrSubscribeTo;
@@ -59,6 +60,9 @@ public class NotificationConsumerImpl implements INotificationConsumer {
 	private static final String STREAM_ESR_RECOM = "S:" + Stream.ESRRecom.getQName().getLocalPart().split("#")[0].toUpperCase();
 	private static final String STREAM_TAXI_UC_ESR_RECOM = "S:" + Stream.TaxiUCESRRecom.getQName().getLocalPart().split("#")[0].toUpperCase();
 	private static final String STREAM_TAXI_UC_ESR_RECOM_DCEP = "S:" + Stream.TaxiUCESRRecomDcep.getQName().getLocalPart().split("#")[0].toUpperCase();
+	private static final String STREAM_MCEP_CONTROL = "S:CONTROL";
+	private final AbstractReceiver receiver = new AbstractReceiver() {};
+	private final CircularFifoBuffer duplicatesCache =  new CircularFifoBuffer(32);
 
 	private final Registration gcmRegIds = Registration.getInstance();
 	
@@ -91,6 +95,35 @@ public class NotificationConsumerImpl implements INotificationConsumer {
 				System.out.format("\t\tnamespaces = %s\n", targetTopic.getTopicNamespaces().toString());
 				System.out.format("\t\tcontent = %s\n", targetTopicContent);
 
+				/*
+				 * RDF parsing
+				 */
+				System.out.print("\tRDF parsing... ");
+				Model rdf;
+				try {
+					rdf = receiver.parseRdf(documentStr);
+				} catch (NoRdfEventException e) {
+					System.out.format("\tNo RDF event content recognized: event not handled. (%s)\n", e.getMessage());
+					return;
+				}
+				System.out.println("\tok");
+				
+				/*
+				 * Do some checking for duplicates (memorizing a few recently seen
+				 * events)
+				 */
+				synchronized (duplicatesCache) {
+					String eventId = rdf.getContextURI().toString();
+					if (duplicatesCache.contains(eventId)) {
+						System.out.println("\tSuppressed Duplicate Event: " + eventId);
+						return;
+					}
+					else {
+						duplicatesCache.add(eventId);
+					}
+				}
+				
+				
 				// Depending on the stream, dispatch request
 				targetTopicContent = targetTopicContent.toUpperCase();
 
@@ -100,12 +133,19 @@ public class NotificationConsumerImpl implements INotificationConsumer {
 					/*
 					 * Deal with Recommendation events:
 					 */
-					handleRecommendation(targetTopicContent, documentStr);
-				} else {
+					handleRecommendation(targetTopicContent, rdf);
+				}
+				else if (targetTopicContent.contains(STREAM_MCEP_CONTROL)) {
+					/*
+					 * Deal with Control events:
+					 */
+					handleControlEvent(targetTopicContent, rdf);
+				}
+				else {
 					/*
 					 * Deal with arbitrary PLAY RDF Events:
 					 */
-					handleArbitraryEvent(targetTopicContent, documentStr);
+					handleArbitraryEvent(targetTopicContent, rdf);
 				}
 			}
 		} catch (TransformerException e) {
@@ -113,19 +153,12 @@ public class NotificationConsumerImpl implements INotificationConsumer {
 		}
 	}
 
-	protected void handleRecommendation(String targetTopicContent, String documentStr) {
+	protected void handleRecommendation(String targetTopicContent, Model rdf) {
 		System.out.format("\ttype: recommendation\n");
 
-		// RDF parsing
-		Model model = null;
 		try {
-			System.out.print("\tRDF parsing... ");
-			AbstractReceiver receiver = new AbstractReceiver() {};
-			model = receiver.parseRdf(documentStr);
-			System.out.println("ok");
-
 			System.out.print("\tExtracting event...");
-			UcTelcoEsrRecom event = UcTelcoEsrRecom.getAllInstances_as(model).firstValue();
+			UcTelcoEsrRecom event = UcTelcoEsrRecom.getAllInstances_as(rdf).firstValue();
 			if (event == null)
 				throw new IllegalArgumentException("event == null");
 			System.out.format(" extracted = %s\n", event.toString());
@@ -290,24 +323,18 @@ public class NotificationConsumerImpl implements INotificationConsumer {
 
 			notifyByPhoneNumber(uctelco_callerPhoneNumber, recomJson);
 
-		} catch (NoRdfEventException e) {
-			System.out.println("rdf parsing error");
-			e.printStackTrace();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-	protected void handleArbitraryEvent(String targetTopicContent, String documentStr) {
+	protected void handleControlEvent(String targetTopicContent, Model rdf) {
+		System.out.format("\ttype: control event\n");
 
 		try {
-			System.out.print("\tRDF parsing... ");
-			AbstractReceiver receiver = new AbstractReceiver() {};
-			Model rdf = receiver.parseRdf(documentStr);
-			System.out.println("ok");
 			StringWriter s = new StringWriter();
 
-			String phoneNumber = "017622002200";
+			String phoneNumber = "";
 			ClosableIterator<Statement> results;
 			results = rdf.findStatements(Variable.ANY, UcTelcoCall.UCTELCOCALLERPHONENUMBER, Variable.ANY);
 			if (results.hasNext()) {
@@ -323,10 +350,38 @@ public class NotificationConsumerImpl implements INotificationConsumer {
 
 			rdf.writeTo(s, Syntax.RdfJson);
 			// get subscribing regIds and use #notifyByTopic(...)
-			sendGcm(phoneNumber, new JsonParser().parse(s.toString()).getAsJsonObject());
+			notifyByPhoneNumber(phoneNumber, new JsonParser().parse(s.toString()).getAsJsonObject());
 
-		} catch (NoRdfEventException e) {
-			System.out.format("\tNo RDF event content recognized: event not handled. (%s)\n", e.getMessage());
+		} catch (JsonSyntaxException e) {
+			System.out.format("\tJsonSyntaxException while creating Json event: event not handled. (%s)\n", e.getMessage());
+		} catch (IOException e) {
+			System.out.format("\tIOException while creating Json even: event not handled. (%s)\n", e.getMessage());
+		}
+	}
+	
+	protected void handleArbitraryEvent(String targetTopicContent, Model rdf) {
+		System.out.format("\ttype: arbitrary event\n");
+
+		try {
+			StringWriter s = new StringWriter();
+
+			String topicUri = "";
+			ClosableIterator<Statement> results;
+			results = rdf.findStatements(Variable.ANY, UcTelcoCall.UCTELCOCALLERPHONENUMBER, Variable.ANY);
+			if (results.hasNext()) {
+				topicUri = results.next().getObject().toString();
+			}
+			else {
+				results.close();
+				results = rdf.findStatements(Variable.ANY, UcTelcoGeoLocation.UCTELCOPHONENUMBER, Variable.ANY);
+				if (results.hasNext()) {
+					topicUri = results.next().getObject().toString();
+				}
+			}
+
+			rdf.writeTo(s, Syntax.RdfJson);
+			notifyByTopic(topicUri, new JsonParser().parse(s.toString()).getAsJsonObject());
+
 		} catch (JsonSyntaxException e) {
 			System.out.format("\tJsonSyntaxException while creating Json event: event not handled. (%s)\n", e.getMessage());
 		} catch (IOException e) {
@@ -343,6 +398,7 @@ public class NotificationConsumerImpl implements INotificationConsumer {
 	
 	private void notifyByTopic(String topicUri,
 			JsonObject eventPayload) {
+		// FIXME stuehmer: get subscribing regIds
 		
 	}
 	private void sendGcm(String registrationId,
