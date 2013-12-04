@@ -9,6 +9,7 @@
 			version="1.0" xmlns:ns1="http://docs.oasis-open.org/wsrf/bf-2"
 			xmlns:tns="http://docs.oasis-open.org/wsrf/r-2" xmlns:xs="http://www.w3.org/2001/XMLSchema">
 			<xs:import namespace="http://docs.oasis-open.org/wsrf/bf-2" />
+			<xs:import namespace="http://www.w3.org/XML/1998/namespace" schemaLocation="http://www.w3.org/2001/xml.xsd"/>
 			<xs:element name="ResourceUnavailableFault" type="tns:ResourceUnavailableFaultType" />
 			<xs:element name="ResourceUnknownFault" type="tns:ResourceUnknownFaultType" />
 			<xs:complexType name="ResourceUnknownFaultType">
@@ -36,6 +37,7 @@
 			xmlns:xs="http://www.w3.org/2001/XMLSchema">
 			<xs:import namespace="http://www.w3.org/2005/08/addressing"
 				schemaLocation="http://www.w3.org/2006/03/addressing/ws-addr.xsd" />
+			<xs:import namespace="http://www.w3.org/XML/1998/namespace" schemaLocation="http://www.w3.org/2001/xml.xsd"/>
 			<xs:element name="BaseFault" type="tns:BaseFaultType" />
 			<xs:complexType name="BaseFaultType">
 				<xs:sequence>
@@ -171,6 +173,7 @@
 			xmlns:ns1="http://docs.oasis-open.org/wsn/b-2" xmlns:tns="http://docs.oasis-open.org/wsn/bw-2"
 			xmlns:xs="http://www.w3.org/2001/XMLSchema">
 			<xs:import namespace="http://docs.oasis-open.org/wsn/b-2" />
+			<xs:import namespace="http://www.w3.org/XML/1998/namespace" schemaLocation="http://www.w3.org/2001/xml.xsd"/> 
 			<xs:element name="GetCurrentMessage" type="tns:GetCurrentMessage" />
 			<xs:element name="GetCurrentMessageResponse" type="tns:GetCurrentMessageResponse" />
 			<xs:element name="Subscribe" type="tns:Subscribe" />
@@ -205,6 +208,7 @@
 				schemaLocation="http://www.w3.org/2006/03/addressing/ws-addr.xsd" />
 			<xs:import namespace="http://docs.oasis-open.org/wsrf/bf-2" />
 			<xs:import namespace="http://docs.oasis-open.org/wsn/t-1" />
+			<xs:import namespace="http://www.w3.org/XML/1998/namespace" schemaLocation="http://www.w3.org/2001/xml.xsd"/> 
 			<xs:element name="ConsumerReference" type="ns1:EndpointReferenceType" />
 			<xs:element name="CreatePullPoint">
 				<xs:complexType>
