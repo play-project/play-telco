@@ -60,7 +60,7 @@ public class NotificationConsumerImpl implements INotificationConsumer {
 	private static final String STREAM_ESR_RECOM = "S:" + Stream.ESRRecom.getQName().getLocalPart().split("#")[0].toUpperCase();
 	private static final String STREAM_TAXI_UC_ESR_RECOM = "S:" + Stream.TaxiUCESRRecom.getQName().getLocalPart().split("#")[0].toUpperCase();
 	private static final String STREAM_TAXI_UC_ESR_RECOM_DCEP = "S:" + Stream.TaxiUCESRRecomDcep.getQName().getLocalPart().split("#")[0].toUpperCase();
-	private static final String STREAM_MCEP_CONTROL = "S:CONTROL";
+	private static final String STREAM_MCEP_CONTROL = "M:CONTROL";
 	private final AbstractReceiver receiver = new AbstractReceiver() {};
 	private final CircularFifoBuffer duplicatesCache =  new CircularFifoBuffer(32);
 
